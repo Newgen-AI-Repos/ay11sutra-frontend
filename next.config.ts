@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',
+  // Removed 'output: export' for Vercel deployment (supports SSR)
 };
 
 export default nextConfig;
