@@ -3,7 +3,7 @@
  * A wrapper around native fetch that handles automatic token refresh.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://empathai-backend-production-a6c7.up.railway.app";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ay11sutra-backend-production.up.railway.app";
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];

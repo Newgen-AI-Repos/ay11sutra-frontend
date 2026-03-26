@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://empathai-backend-production-a6c7.up.railway.app";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ay11sutra-backend-production.up.railway.app";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -62,13 +62,26 @@ function LoginForm({
         credentials: "include",
       });
 
-      const data = await res.json();
-
+      // Handle non-OK responses
       if (!res.ok) {
-        setError(data.detail || "Invalid email or password");
+        let errorMessage = "Invalid email or password";
+        try {
+          const data = await res.json();
+          errorMessage = data.detail || errorMessage;
+        } catch (jsonErr) {
+          // If not JSON, use a generic status-based message
+          if (res.status === 401) errorMessage = "Invalid email or password";
+          else if (res.status === 404) errorMessage = "Login endpoint not found (404)";
+          else if (res.status >= 500) errorMessage = `Server error (${res.status}). Please try again later.`;
+          else errorMessage = `Error: ${res.statusText || res.status}`;
+        }
+        
+        setError(errorMessage);
         setIsLoading(false);
         return;
       }
+
+      const data = await res.json();
 
       // Save token and user info
       localStorage.setItem("ay11sutra_token", data.access_token);
@@ -76,9 +89,14 @@ function LoginForm({
       localStorage.setItem("ay11sutra_user", JSON.stringify(data.user));
       
       router.push("/");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login error:", err);
-      setError("Connection error. Please check if the server is running.");
+      // This is usually a network error (CORS, DNS, Server Down)
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        setError("Connection error. The server may be down or unreachable.");
+      } else {
+        setError("An unexpected error occurred. Please check your connection.");
+      }
     }
 
     setIsLoading(false);
