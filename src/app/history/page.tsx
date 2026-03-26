@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 import {
   ArrowLeft,
   Search,
@@ -76,9 +77,7 @@ export default function HistoryPage() {
 
   const fetchUser = async (token: string) => {
     try {
-      const res = await fetch(`${API_BASE}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiFetch(`/auth/me`);
       if (res.ok) {
         const data = await res.json();
         setUserInfo({ name: data.name });
@@ -91,18 +90,14 @@ export default function HistoryPage() {
   const fetchAudits = async (token: string, query: string = "") => {
     setLoading(true);
     try {
-      const url = new URL(`${API_BASE}/audits`);
+      const url = new URL(`/audits`, "http://localhost"); // URL base doesn't matter for path extraction
       if (query) url.searchParams.append("query", query);
       
-      const res = await fetch(url.toString(), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiFetch(`${url.pathname}${url.search}`);
       
       if (res.ok) {
         const data = await res.json();
         setAudits(data.audits);
-      } else if (res.status === 401) {
-        router.push("/login");
       }
     } catch (err) {
       console.error("Failed to fetch history", err);

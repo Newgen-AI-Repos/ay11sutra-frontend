@@ -38,6 +38,7 @@ export default function SignupPage() {
           organization: organization || undefined,
           phone: phone || undefined,
         }),
+        credentials: "include",
       });
 
       const data = await res.json();

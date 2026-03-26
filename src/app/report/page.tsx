@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 import { ArrowLeft, ShieldCheck, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,9 +37,7 @@ function ReportContent() {
 
   const fetchUser = async (token: string) => {
     try {
-      const res = await fetch(`${API_BASE}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiFetch(`/auth/me`);
       if (res.ok) {
         const data = await res.json();
         setUserInfo({ name: data.name, email: data.email });
@@ -50,9 +49,7 @@ function ReportContent() {
 
   const fetchAuditDetail = async (token: string, auditId: string) => {
     try {
-      const res = await fetch(`${API_BASE}/audits/${auditId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiFetch(`/audits/${auditId}`);
       
       if (res.ok) {
         const rawData = await res.json();
@@ -91,7 +88,12 @@ function ReportContent() {
     setLoading(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await apiFetch(`/auth/logout`, { method: "POST" });
+    } catch (err) {
+      console.error("Logout error", err);
+    }
     localStorage.removeItem("ay11sutra_auth");
     localStorage.removeItem("ay11sutra_token");
     router.push("/login");

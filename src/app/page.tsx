@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 import {
   Rocket,
   AlertCircle,
@@ -90,18 +91,11 @@ export default function Home() {
       if (auth === "true" && token) {
         setIsAuthenticated(true);
         try {
-          const res = await fetch(`${API_BASE}/auth/me`, {
-            method: "GET",
-            headers: { "Authorization": `Bearer ${token}` },
-          });
+          const res = await apiFetch(`/auth/me`);
           
           if (res.ok) {
             const data = await res.json();
             setUserInfo({ name: data.name, email: data.email });
-          } else {
-            console.error("Auth token invalid or expired");
-            // Optional: Auto-logout if token is bad?
-            // handleLogout(); 
           }
         } catch (err) {
           console.error("Failed to fetch user info", err);
@@ -116,7 +110,12 @@ export default function Home() {
   }, [router]);
 
   // Logout handler
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await apiFetch(`/auth/logout`, { method: "POST" });
+    } catch (err) {
+      console.error("Logout error", err);
+    }
     localStorage.removeItem("ay11sutra_auth");
     localStorage.removeItem("ay11sutra_token");
     setUserInfo(null);
@@ -189,11 +188,10 @@ export default function Home() {
       // Get JWT token
       const token = localStorage.getItem("ay11sutra_token");
       
-      const res = await fetch(`${API_BASE}/audit`, {
+      const res = await apiFetch(`/audit`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ url: auditUrl }),
       });
