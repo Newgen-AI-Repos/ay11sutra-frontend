@@ -277,6 +277,3 @@ function LoginForm({
     </div>
   );
 }
-  </div>
-  );
-}
