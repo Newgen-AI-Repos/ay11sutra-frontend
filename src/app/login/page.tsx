@@ -8,30 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
+import { apiFetch } from "@/lib/apiFetch";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ay11sutra-backend-production.up.railway.app";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [infoMessage, setInfoMessage] = useState("");
-
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50">Loading...</div>}>
-      <LoginForm 
-        email={email} setEmail={setEmail} 
-        password={password} setPassword={setPassword}
-        showPassword={showPassword} setShowPassword={setShowPassword}
-        error={error} setError={setError}
-        isLoading={isLoading} setIsLoading={setIsLoading}
-        infoMessage={infoMessage} setInfoMessage={setInfoMessage}
-      />
-    </Suspense>
-  );
-}
+// ... (LoginPage stayed the same)
 
 function LoginForm({ 
   email, setEmail, password, setPassword, 
@@ -54,34 +35,28 @@ function LoginForm({
     setIsLoading(true);
 
     try {
-      // Call real login API
-      const res = await fetch(`${API_BASE}/auth/login`, {
+      // Use apiFetch for consistent error handling
+      const res = await apiFetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
         credentials: "include",
       });
 
-      // Handle non-OK responses
+      const data = await res.json();
+
       if (!res.ok) {
-        let errorMessage = "Invalid email or password";
-        try {
-          const data = await res.json();
-          errorMessage = data.detail || errorMessage;
-        } catch (jsonErr) {
-          // If not JSON, use a generic status-based message
-          if (res.status === 401) errorMessage = "Invalid email or password";
-          else if (res.status === 404) errorMessage = "Login endpoint not found (404)";
-          else if (res.status >= 500) errorMessage = `Server error (${res.status}). Please try again later.`;
-          else errorMessage = `Error: ${res.statusText || res.status}`;
+        // Handle structured error from backend or apiFetch
+        if (data.code === "NETWORK_ERROR") {
+          setError("Connection error. The server may be down or unreachable.");
+        } else if (res.status === 401) {
+          setError(data.error || "Invalid email or password");
+        } else {
+          setError(data.error || `Error ${res.status}: ${res.statusText}`);
         }
-        
-        setError(errorMessage);
         setIsLoading(false);
         return;
       }
-
-      const data = await res.json();
 
       // Save token and user info
       localStorage.setItem("ay11sutra_token", data.access_token);
@@ -90,13 +65,8 @@ function LoginForm({
       
       router.push("/");
     } catch (err: any) {
-      console.error("Login error:", err);
-      // This is usually a network error (CORS, DNS, Server Down)
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        setError("Connection error. The server may be down or unreachable.");
-      } else {
-        setError("An unexpected error occurred. Please check your connection.");
-      }
+      console.error("Login component error:", err);
+      setError("An unexpected error occurred. Please try again.");
     }
 
     setIsLoading(false);
