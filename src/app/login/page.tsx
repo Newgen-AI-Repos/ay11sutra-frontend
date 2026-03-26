@@ -12,7 +12,28 @@ import { apiFetch } from "@/lib/apiFetch";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ay11sutra-backend-production.up.railway.app";
 
-// ... (LoginPage stayed the same)
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [infoMessage, setInfoMessage] = useState("");
+
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50">Loading...</div>}>
+      <LoginForm 
+        email={email} setEmail={setEmail} 
+        password={password} setPassword={setPassword}
+        showPassword={showPassword} setShowPassword={setShowPassword}
+        error={error} setError={setError}
+        isLoading={isLoading} setIsLoading={setIsLoading}
+        infoMessage={infoMessage} setInfoMessage={setInfoMessage}
+      />
+    </Suspense>
+  );
+}
 
 function LoginForm({ 
   email, setEmail, password, setPassword, 
